@@ -1,0 +1,72 @@
+name: Notion Calendar → README
+on:
+  schedule:
+    - cron: "*/30 * * * *"   # 30분마다
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        run: |
+          npm init -y
+          npm i @notionhq/client dayjs
+
+      - name: Generate calendar.svg
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+        run: |
+          node <<'NODE'
+          const { Client } = require("@notionhq/client");
+          const fs = require("fs");
+          const dayjs = require("dayjs");
+
+          const notion = new Client({ auth: process.env.NOTION_TOKEN });
+          const db = process.env.NOTION_DATABASE_ID;
+
+          (async () => {
+            // 1) 노션 DB에서 날짜 속성 있는 이벤트 가져오기 (필드명 예: "Date")
+            const pages = await notion.databases.query({
+              database_id: db,
+              filter: { property: "Date", date: { on_or_after: dayjs().startOf('month').toISOString() } },
+              sorts: [{ property: "Date", direction: "ascending" }]
+            });
+
+            // 2) 매우 단순한 SVG 렌더(샘플) — 필요에 맞게 꾸며 쓰세요
+            const items = pages.results.map(p => {
+              const title = (p.properties.Name?.title?.[0]?.plain_text) || "Untitled";
+              const date = p.properties.Date?.date?.start || "";
+              return `⟨${date}⟩ ${title}`;
+            });
+
+            const svg = `
+              <svg xmlns="http://www.w3.org/2000/svg" width="800" height="${80 + items.length*22}">
+                <style>
+                  .t { font: 14px sans-serif; }
+                  .h { font: 16px sans-serif; font-weight: 700; }
+                </style>
+                <rect width="100%" height="100%" fill="white"/>
+                <text x="20" y="40" class="h">Notion Calendar (auto-generated)</text>
+                ${items.map((t,i)=>`<text x="20" y="${70+i*22}" class="t">${t.replace(/&/g,'&amp;')}</text>`).join('')}
+              </svg>`;
+            fs.writeFileSync("calendar.svg", svg.trim());
+          })();
+          NODE
+
+      - name: Commit & push
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "chore: update calendar.svg" || echo "No changes"
+          git push
