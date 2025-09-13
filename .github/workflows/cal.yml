@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: chucoding/notion2svg@v1.2
+      - uses: chucoding/notion2svg@v2
         with:
           NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
           NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
