@@ -1,0 +1,19 @@
+name: GitHub-Calendar-on-README
+
+on:
+  push:
+    branches: [ "main" ]
+  schedule:
+    - cron: '*/5 * * * *' # 5분마다 실행
+
+jobs:
+  notion2svg:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: chucoding/notion2svg@v1.1
+        with:
+          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+          WIDTH: 800
+          HEIGHT: 300
