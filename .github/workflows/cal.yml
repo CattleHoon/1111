@@ -1,24 +1,28 @@
-name: GitHub-Calendar-on-README
+name: Notion Calendar to README
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
   schedule:
-    - cron: '*/5 * * * *' # 5분마다 실행
+    - cron: "0 */3 * * *" # 매 3시간마다 실행
 
 jobs:
-  notion2svg:
+  update-calendar:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: chucoding/notion2svg@270fac87eb6c5da686eaa04927cec44ab28da7e2
+
+      - name: Update Notion calendar on README
+        uses: konstantin-s/notion-calendar-action@v2.2
         with:
-          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
-          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
-          WIDTH: 800
-          HEIGHT: 300
-      - name: Upload artifact
+          notion_token: ${{ secrets.NOTION_API_KEY }}
+          notion_database_id: ${{ secrets.NOTION_DATABASE_ID }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          image_width: 800
+
+      - name: Upload calendar image
         uses: actions/upload-artifact@v4
         with:
-          name: calendar
-          path: ./calendar.svg
+          name: calendar-image
+          path: notion_calendar.svg
