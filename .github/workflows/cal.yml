@@ -18,7 +18,7 @@ jobs:
           WIDTH: 800
           HEIGHT: 300
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: calendar
           path: ./calendar.svg
